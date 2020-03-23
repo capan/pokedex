@@ -24,6 +24,12 @@ const PokemonList = (props) => {
         if (scrolledToBottom) {
             props.loadMore();
         }
+        const toTopButton = document.getElementById('toTopBtn');
+        if (document.body.scrollTop > 20 || document.documentElement.scrollTop > 20) {
+            toTopButton.style.display = "block";
+        } else {
+            toTopButton.style.display = "none";
+        }
     };
 
     return (
@@ -34,6 +40,11 @@ const PokemonList = (props) => {
                 </div> :
                 <h1>When you click favourite button pokemons will appear here!</h1>
             }
+            <button onClick={() => {
+                debugger
+                document.body.scrollTop = 0;
+                document.documentElement.scrollTop = 0;
+            }} id="toTopBtn" title="Go Top!">Top</button>
             <div id="lazyload">{props.loadingMessage}</div>
         </React.Fragment>
     );

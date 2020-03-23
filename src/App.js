@@ -1,11 +1,11 @@
 import React, { Component } from 'react';
-import { Route, BrowserRouter as Router, Switch } from 'react-router-dom';
 import MainNavbar from './Components/MainNavbar';
 import PokemonList from './Components/PokemonList';
 import PokemonCard from './Components/PokemonCard';
 import PokemonDetail from './Components/PokemonDetail';
 
 import './App.css';
+import './Components/DetailModal.scss';
 
 class App extends Component {
   constructor(props) {
@@ -16,8 +16,7 @@ class App extends Component {
       limit: 50,
       offset: 0,
       favs: [],
-      detailClicked: false,
-      detailPokemon: null,
+      modalData: null,
     };
     this.loadMore = this.loadMore.bind(this);
     this.requestMaker = this.requestMaker.bind(this);
@@ -69,23 +68,38 @@ class App extends Component {
     this.requestMaker('https://pokeapi.co/api/v2/pokemon', `limit=${this.state.limit}&offset=${this.state.offset}`, (data) => this.setState({ pokemons: data }));
   }
 
-  onCardDetailClickHandler(name) {
-    this.setState({
-      detailClicked: true,
-      detailPokemon: name,
+  async onCardDetailClickHandler(url) {
+    this.requestMaker(url, '', (data) => {
+      const modalData = {};
+      modalData.name = data.name;
+      modalData.sprite = data.sprites.front_default;
+      modalData.types = data.types;
+      modalData.stats = data.stats;
+      modalData.moves = data.moves;
+      this.setState({
+        modalData: modalData,
+      });
+      const modal = document.getElementById('pokemonDetailModal');
+      modal.style.display = "block";
+      const span = document.getElementsByClassName("close")[0];
+      span.onclick = function () {
+        modal.style.display = "none";
+      }
+      window.onclick = function (event) {
+        if (event.target === modal) {
+          modal.style.display = "none";
+        }
+      }
     })
   }
 
   render() {
 
-    if (this.state.detailClicked === true) {
-      window.location = `http://localhost:3000/detail/${this.state.detailPokemon}`;
-    }
-
     let pokemons = null; let loadingMessage = ''; let favouritePokemons = null;
     if (this.state.pokemons.count > 0) {
       pokemons = this.state.pokemons.results.map((el, index) => <PokemonCard
-        onClick={() => this.onCardDetailClickHandler(el.name)}
+        className="pokemon-card"
+        onClick={async () => await this.onCardDetailClickHandler(el.url)}
         name={el.name}
         url={el.url}
         isFav={el.isFav}
@@ -96,7 +110,8 @@ class App extends Component {
       favouritePokemons = this.state.pokemons.results.map((el, index) => {
         if (el.isFav) {
           return <PokemonCard
-            onClick={() => this.onCardDetailClickHandler(el.name)}
+            className="pokemon-card"
+            onClick={async () => await this.onCardDetailClickHandler(el.url)}
             name={el.name}
             url={el.url}
             isFav={el.isFav}
@@ -106,32 +121,29 @@ class App extends Component {
         }
       })
     }
-    const { history } = this.props;
+
     return (
       <div className="App" id="App">
-        <Router history={history}>
-          <Switch>
-            <Route exact path="/">
-              {this.state.pokemons.count > 0 ?
-                <React.Fragment>
-                  <MainNavbar titles={['Pokemons', 'My Favourites']}>
-                    <PokemonList loadMore={() => this.loadMore()} loadingMessage={loadingMessage}>
-                      {pokemons}
-                    </PokemonList>
-                    <PokemonList loadingMessage="" loadMore={() => { }}>
-                      {favouritePokemons}
-                    </PokemonList>
-                  </MainNavbar>
-                </React.Fragment>
-                :
-                <h1>Loading...</h1>
-              }
-            </Route>
-            <Route path="/detail/:name">
-              <PokemonDetail />
-            </Route>
-          </Switch>
-        </Router>
+        {this.state.pokemons.count > 0 ?
+          <React.Fragment>
+            <MainNavbar titles={['Pokemons', 'My Favourites']}>
+              <PokemonList loadMore={() => this.loadMore()} loadingMessage={loadingMessage}>
+                {pokemons}
+              </PokemonList>
+              <PokemonList loadingMessage="" loadMore={() => { }}>
+                {favouritePokemons}
+              </PokemonList>
+            </MainNavbar>
+          </React.Fragment>
+          :
+          <h1>Loading...</h1>
+        }
+        <div id="pokemonDetailModal" className="modal">
+          <div className="modal-content">
+            <div className="close">&times;</div>
+            <PokemonDetail modalData={this.state.modalData} />
+          </div>
+        </div>
       </div>
     );
   }
