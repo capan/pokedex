@@ -41,7 +41,6 @@ const PokemonList = (props) => {
                 <h1>When you click favourite button pokemons will appear here!</h1>
             }
             <button onClick={() => {
-                debugger
                 document.body.scrollTop = 0;
                 document.documentElement.scrollTop = 0;
             }} id="toTopBtn" title="Go Top!">Top</button>

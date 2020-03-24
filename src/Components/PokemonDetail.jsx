@@ -55,7 +55,6 @@ class PokemonDetail extends Component {
                 </div>
             });
             moves = this.state.data.moves.map((el, i) => {
-                debugger
                 if (window.innerWidth < 500 && i < 5) {
                     return <li>{el.move.name}</li>
                 } else if (window.innerWidth > 500) {
